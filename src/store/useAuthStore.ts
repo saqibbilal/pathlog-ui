@@ -1,11 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-}
+import type {User} from '@/features/auth/types'; // Using the alias!
 
 interface AuthState {
     user: User | null;
@@ -21,11 +16,19 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             token: null,
             isAuthenticated: false,
-            setAuth: (user, token) => set({ user, token }),
-            logout: () => set({ user: null, token: null }),
+            setAuth: (user, token) => set({
+                user,
+                token,
+                isAuthenticated: true
+            }),
+            logout: () => set({
+                user: null,
+                token: null,
+                isAuthenticated: false
+            }),
         }),
         {
-            name: 'pathlog-auth-storage', // Key in LocalStorage
+            name: 'pathlog-auth-storage',
         }
     )
 );
