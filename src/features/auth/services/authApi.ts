@@ -1,5 +1,5 @@
 // src/features/auth/services/authApi.ts
-import api from '../../../api/axios';
+import api from '@/api/axios';
 import type { LoginCredentials, AuthResponse } from '@/features/auth/types';
 
 
