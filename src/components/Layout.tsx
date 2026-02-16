@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { Outlet, Link } from 'react-router-dom';
-import { authService } from '@/features/auth/services/authService';
+import { authApi } from '@/features/auth/services/authApi';
 
 export const Layout = () => {
     const user = useAuthStore((state) => state.user);
@@ -9,7 +9,7 @@ export const Layout = () => {
     const handleLogout = async () => {
         try {
             // Attempt to tell Laravel to kill the token
-            await authService.logout();
+            await authApi.logout();
         } catch (error) {
             // Even if the server is down or the token is already invalid,
             // we catch the error so the next line still runs.
