@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { GuestRoute } from './components/GuestRoute';
 import { Layout } from '@/components/Layout';
+import { JobsPage } from './pages/JobsPage'; // Import the page we just built
 
 function App() {
     return (
@@ -11,14 +12,14 @@ function App() {
                 {/* GUEST ONLY ROUTES */}
                 <Route element={<GuestRoute />}>
                     <Route path="/login" element={<LoginPage />} />
-                    {/* Future Register page goes here */}
                 </Route>
 
                 {/* AUTH ONLY ROUTES */}
                 <Route element={<ProtectedRoute />}>
                     <Route element={<Layout />}>
+                        {/* Use the dedicated components for each route */}
                         <Route path="/dashboard" element={<DashboardHome />} />
-                        <Route path="/jobs" element={<div>Job List</div>} />
+                        <Route path="/jobs" element={<JobsPage />} />
                     </Route>
                 </Route>
 
@@ -29,11 +30,12 @@ function App() {
     );
 }
 
-// Simple temp component for the home view
 const DashboardHome = () => (
     <div>
-        <h1 className="text-3xl font-bold text-slate-900">Overview</h1>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Overview</h1>
         <p className="text-slate-500 mt-2">Welcome back to your job tracking command center.</p>
+
+        {/* Later, we can add high-level stats here like "Total Applications: 15" */}
     </div>
 );
 
