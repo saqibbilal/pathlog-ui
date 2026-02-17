@@ -1,12 +1,5 @@
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected';
 
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  created_at: string;
-}
-
 export interface JobContact {
     name: string;
     email: string;

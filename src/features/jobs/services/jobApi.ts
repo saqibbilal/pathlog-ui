@@ -14,4 +14,9 @@ export const jobApi  = {
         return response.data.data; // Laravel Resource wraps single objects in 'data' too
     },
 
+    getJobById: async (id: number): Promise<JobApplication> => {
+        const response = await api.get(`/jobs/${id}`);
+        return response.data.data;
+    }
+
 }
