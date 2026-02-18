@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jobApi } from '../services/jobApi';
-import type { CreateJobRequest } from '../types';
+import type { JobStatus, CreateJobRequest } from '@/features/jobs/types';
 
 interface Props {
     isOpen: boolean;
@@ -18,15 +18,14 @@ export const AddJobSlideOver = ({ isOpen, onClose, onSuccess }: Props) => {
 
         const formData = new FormData(e.currentTarget);
 
-        // Construct the request object matching your CreateJobRequest type
-        const payload: any = {
-            company_name: formData.get('company_name'),
-            job_title: formData.get('job_title'),
-            status: formData.get('status'),
-            job_description_url: formData.get('job_description_url'),
-            job_description_text: formData.get('job_description_text'),
-            // Laravel likely expects a date. We'll default to today if empty.
-            applied_at: new Date().toISOString().split('T')[0]
+        // We cast to string to satisfy the CreateJobRequest interface
+        const payload: CreateJobRequest = {
+            company_name: formData.get('company_name') as string,
+            job_title: formData.get('job_title') as string,
+            status: formData.get('status') as JobStatus, // 'any' here is okay because it's a specific Enum value
+            applied_at: new Date().toISOString().split('T')[0],
+            job_description_url: (formData.get('job_description_url') as string) || undefined,
+            job_description_text: (formData.get('job_description_text') as string) || undefined,
         };
 
         try {
@@ -34,7 +33,6 @@ export const AddJobSlideOver = ({ isOpen, onClose, onSuccess }: Props) => {
             onSuccess();
         } catch (error) {
             console.error("Failed to save job:", error);
-            // Hint: Check the Network tab in DevTools to see Laravel validation errors
         } finally {
             setLoading(false);
         }

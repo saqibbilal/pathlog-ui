@@ -3,7 +3,8 @@ import { jobApi } from '@/features/jobs/services/jobApi';
 import type { JobApplication } from '@/features/jobs/types';
 import { JobTable } from '@/features/jobs/components/JobTable';
 import { JobDetailsModal } from '@/features/jobs/components/JobDetailsModal';
-import { AddJobSlideOver } from '@/features/jobs/components/AddJobSlideOver'; // 1. Import Slide-over
+import { AddJobSlideOver } from '@/features/jobs/components/AddJobSlideOver';
+import { SuccessToast } from '@/components/ui/Toast';
 
 export const JobsPage = () => {
     const [jobs, setJobs] = useState<JobApplication[]>([]);
@@ -12,7 +13,9 @@ export const JobsPage = () => {
     // State for Modal & Slide-over Management
     const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isAddOpen, setIsAddOpen] = useState(false); // 2. Add Slide-over state
+    const [isAddOpen, setIsAddOpen] = useState(false);
+
+    const [showToast, setShowToast] = useState(false);
 
     // 3. Memoize the fetch function so we can reuse it
     const fetchJobs = useCallback(async () => {
@@ -40,6 +43,15 @@ export const JobsPage = () => {
         setSelectedJobId(null);
     };
 
+    const handleAddSuccess = () => {
+        setIsAddOpen(false);
+        fetchJobs(); // Refresh the list
+
+        // Trigger the motivation!
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000); // Hide after 4 seconds
+    };
+
     if (loading) return <div className="p-8 text-slate-500">Loading your applications...</div>;
 
     return (
@@ -62,7 +74,7 @@ export const JobsPage = () => {
                 <JobTable jobs={jobs} onViewDetails={handleViewDetails} />
             ) : (
                 <div className="text-center p-12 bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                    <p className="text-slate-500">No applications found. Time to start applying!</p>
+                    <p className="text-slate-500">Your journey starts here. Your first application is just one click away! 💡</p>
                 </div>
             )}
 
@@ -78,11 +90,9 @@ export const JobsPage = () => {
             <AddJobSlideOver
                 isOpen={isAddOpen}
                 onClose={() => setIsAddOpen(false)}
-                onSuccess={() => {
-                    setIsAddOpen(false);
-                    fetchJobs(); // Refresh the list after adding a job
-                }}
+                onSuccess={handleAddSuccess}
             />
+            <SuccessToast isVisible={showToast} />
         </div>
     );
 };
