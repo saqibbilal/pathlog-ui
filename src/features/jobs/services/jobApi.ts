@@ -17,6 +17,7 @@ export const jobApi  = {
     getJobById: async (id: number): Promise<JobApplication> => {
         const response = await api.get(`/jobs/${id}`);
         return response.data.data;
-    }
+    },
+
 
 }
