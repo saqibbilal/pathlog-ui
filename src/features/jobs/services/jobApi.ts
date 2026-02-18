@@ -3,8 +3,8 @@ import type { CreateJobRequest, JobPaginationResponse, JobApplication } from '@/
 
 export const jobApi  = {
     // Get all jobs with pagination
-    getJobs: async (page = 1): Promise<JobPaginationResponse> => {
-        const response = await api.get(`/jobs?page=${page}`);
+    getJobs: async (page = 1, perPage = 10): Promise<JobPaginationResponse> => {
+        const response = await api.get(`/jobs?page=${page}&per_page=${perPage}`);
         return response.data;
     },
 
@@ -19,5 +19,18 @@ export const jobApi  = {
         return response.data.data;
     },
 
+    updateJob: async (id: number, data: Partial<CreateJobRequest>): Promise<JobApplication> => {
+        const response = await api.put(`/jobs/${id}`, data);
+        return response.data.data;
+    },
+
+    deleteJob: async (id: number): Promise<void> => {
+        await api.delete(`/jobs/${id}`);
+    },
+
+    // Add to your jobApi object in jobApi.ts
+    bulkDeleteJobs: async (ids: number[]): Promise<void> => {
+        await api.post('/jobs/bulk-delete', { ids }); // Or use delete with a body if your backend is configured for it
+    },
 
 }

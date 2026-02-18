@@ -48,3 +48,4 @@ export interface JobPaginationResponse {
         total: number;
     };
 }
+
