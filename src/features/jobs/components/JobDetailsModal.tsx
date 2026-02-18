@@ -2,15 +2,33 @@ import { useEffect, useState } from 'react';
 import { jobApi } from '@/features/jobs/services/jobApi';
 import type { JobApplication } from '@/features/jobs/types';
 import { JobStatusBadge } from '@/features/jobs/components/JobStatusBadge';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface Props {
     jobId: number;
     onClose: () => void;
+    onDelete: () => void;
 }
 
-export const JobDetailsModal = ({ jobId, onClose }: Props) => {
+export const JobDetailsModal = ({ jobId, onClose, onDelete }: Props) => {
     const [job, setJob] = useState<JobApplication | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // New State for Custom Confirm Dialog
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+    const handleDelete = async () => {
+        setIsDeleteConfirmOpen(false);
+        setIsDeleting(true);
+        try {
+            await jobApi.deleteJob(jobId);
+            onDelete();
+        } catch (error) {
+            console.error("Delete failed", error);
+            setIsDeleting(false);
+        }
+    };
 
     useEffect(() => {
         const fetchJobDetails = async () => {
@@ -94,25 +112,46 @@ export const JobDetailsModal = ({ jobId, onClose }: Props) => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                    {!loading && job?.job_description_url && (
-                        <a
-                            href={job.job_description_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
-                        >
-                            View Original Post ↗
-                        </a>
-                    )}
+                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                    {/* Left side: Delete Action */}
                     <button
-                        onClick={onClose}
-                        className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all"
+                        onClick={() => setIsDeleteConfirmOpen(true)}
+                        disabled={loading || isDeleting}
+                        className="text-rose-600 hover:text-rose-700 text-sm font-bold px-4 py-2 rounded-lg hover:bg-rose-50 transition-colors disabled:opacity-50"
                     >
-                        Close
+                        {isDeleting ? 'Deleting...' : 'Delete Application'}
                     </button>
+
+                    {/* Right side: External Link & Close */}
+                    <div className="flex gap-3">
+                        {!loading && job?.job_description_url && (
+                            <a
+                                href={job.job_description_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center"
+                            >
+                                Original Post ↗
+                            </a>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md"
+                        >
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
+            {/* The Custom Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={isDeleteConfirmOpen}
+                title="Delete Application?"
+                message={`Are you sure you want to delete this job application? This action is permanent.`}
+                confirmText="Yes, Delete it"
+                onConfirm={handleDelete}
+                onCancel={() => setIsDeleteConfirmOpen(false)}
+            />
         </div>
     );
 };
