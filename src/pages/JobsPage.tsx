@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { jobApi } from '@/features/jobs/services/jobApi';
 import type { JobApplication, JobPaginationResponse } from '@/features/jobs/types';
 import { JobTable } from '@/features/jobs/components/JobTable';
@@ -45,6 +46,9 @@ export const JobsPage = () => {
     const [showToast, setShowToast] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
+    // Edit State
+    const [jobToEdit, setJobToEdit] = useState<JobApplication | null>(null);
+
     // --- Data Fetching ---
     const fetchJobs = useCallback(async (page = 1, currentPerPage = perPage) => {
         setLoading(true);
@@ -75,16 +79,17 @@ export const JobsPage = () => {
         }
     };
 
-    const handleAddSuccess = () => {
+    const handleSuccess = () => {
         setIsAddOpen(false);
-        fetchJobs();
+        setJobToEdit(null);
+        fetchJobs(pagination?.current_page || 1);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 4000);
     };
 
     const handleDeleteSuccess = () => {
         setIsModalOpen(false);
-        setSelectedJobId(null);
+        setTimeout(() => setSelectedJobId(null), 300); // Clear after animation
         fetchJobs(pagination?.current_page || 1);
     };
 
@@ -92,6 +97,16 @@ export const JobsPage = () => {
         const newPerPage = Number(e.target.value);
         setPerPage(newPerPage);
         fetchJobs(1, newPerPage);
+    };
+
+    const handleEditTrigger = (job: JobApplication) => {
+        setIsModalOpen(false);
+        // Delay opening the slideover until modal is gone
+        setTimeout(() => {
+            setJobToEdit(job);
+            setIsAddOpen(true);
+            setSelectedJobId(null);
+        }, 300);
     };
 
     return (
@@ -114,7 +129,10 @@ export const JobsPage = () => {
                     )}
 
                     <button
-                        onClick={() => setIsAddOpen(true)}
+                        onClick={() => {
+                            setJobToEdit(null);
+                            setIsAddOpen(true);
+                        }}
                         className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                     >
                         + Add New Job
@@ -134,11 +152,9 @@ export const JobsPage = () => {
                         />
                     </div>
 
-                    {/* Persistant Footer Bar */}
+                    {/* Pagination Bar */}
                     {pagination && (
                         <div className="mt-8 flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-
-                            {/* Left: Page Numbers (Conditional) */}
                             <div className="flex items-center gap-1 min-h-[40px]">
                                 {pagination.last_page > 1 ? (
                                     <>
@@ -157,10 +173,8 @@ export const JobsPage = () => {
                                                     onClick={() => typeof page === 'number' && fetchJobs(page)}
                                                     className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all ${
                                                         page === pagination.current_page
-                                                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
-                                                            : page === '...'
-                                                                ? 'text-slate-400 cursor-default'
-                                                                : 'text-slate-600 hover:bg-slate-50'
+                                                            ? 'bg-indigo-600 text-white shadow-md'
+                                                            : 'text-slate-600 hover:bg-slate-50'
                                                     }`}
                                                 >
                                                     {page}
@@ -180,18 +194,14 @@ export const JobsPage = () => {
                                 )}
                             </div>
 
-                            {/* Right: Info & Density (Always Visible) */}
                             <div className="flex items-center gap-6">
                                 <span className="text-sm text-slate-400 font-medium italic">
-                                    {pagination.total > 0
-                                        ? `Showing ${pagination.from}-${pagination.to} of ${pagination.total} entries`
-                                        : 'No entries'
-                                    }
+                                    {pagination.total > 0 ? `Showing ${pagination.from}-${pagination.to} of ${pagination.total}` : 'No entries'}
                                 </span>
                                 <div className="flex items-center gap-2 border-l border-slate-100 pl-6">
                                     <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Per Page:</span>
                                     <select
-                                        className="text-xs border-slate-100 rounded-lg bg-slate-50 text-slate-500 py-1 cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                        className="text-xs border-slate-100 rounded-lg bg-slate-50 text-slate-500 py-1"
                                         value={perPage}
                                         onChange={handlePerPageChange}
                                     >
@@ -206,28 +216,39 @@ export const JobsPage = () => {
                 </>
             ) : (
                 <div className="text-center p-20 bg-white rounded-3xl border-2 border-dashed border-slate-100">
-                    <div className="text-4xl mb-4">💡</div>
-                    <p className="text-slate-500 font-medium">Your journey starts here. Your first application is just one click away!</p>
+                    <p className="text-slate-500 font-medium">Start your journey by adding your first job lead!</p>
                 </div>
             )}
 
-            {/* Overlays */}
-            {isModalOpen && selectedJobId && (
-                <JobDetailsModal
-                    jobId={selectedJobId}
-                    onClose={() => { setIsModalOpen(false); setSelectedJobId(null); }}
-                    onDelete={handleDeleteSuccess}
-                />
-            )}
+            {/* MODAL WRAPPED IN ANIMATEPRESENCE FOR SMOOTH EXIT */}
+            <AnimatePresence>
+                {isModalOpen && selectedJobId && (
+                    <JobDetailsModal
+                        key="job-details-modal"
+                        jobId={selectedJobId}
+                        onClose={() => { setIsModalOpen(false); setTimeout(() => setSelectedJobId(null), 300); }}
+                        onDelete={handleDeleteSuccess}
+                        onEdit={handleEditTrigger}
+                    />
+                )}
+            </AnimatePresence>
 
-            <AddJobSlideOver isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} onSuccess={handleAddSuccess} />
+            <AddJobSlideOver
+                isOpen={isAddOpen}
+                jobToEdit={jobToEdit}
+                onClose={() => {
+                    setIsAddOpen(false);
+                    setJobToEdit(null);
+                }}
+                onSuccess={handleSuccess}
+            />
+
             <SuccessToast isVisible={showToast} />
 
             <ConfirmDialog
                 isOpen={isDeleteConfirmOpen}
                 title="Delete Applications?"
-                message={`Are you sure you want to delete ${selectedIds.length} job applications? This action is permanent.`}
-                confirmText="Yes, Delete Them"
+                message={`Are you sure you want to delete ${selectedIds.length} applications?`}
                 onConfirm={handleBulkDelete}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
             />
