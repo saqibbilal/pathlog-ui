@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { jobApi } from '@/features/jobs/services/jobApi';
 import type { JobApplication } from '@/features/jobs/types';
 import { JobStatusBadge } from '@/features/jobs/components/JobStatusBadge';
@@ -8,15 +9,29 @@ interface Props {
     jobId: number;
     onClose: () => void;
     onDelete: () => void;
+    onEdit: (job: JobApplication) => void;
 }
 
-export const JobDetailsModal = ({ jobId, onClose, onDelete }: Props) => {
+export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => {
     const [job, setJob] = useState<JobApplication | null>(null);
     const [loading, setLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
-
-    // New State for Custom Confirm Dialog
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchJobDetails = async () => {
+            setLoading(true);
+            try {
+                const data = await jobApi.getJobById(jobId);
+                setJob(data);
+            } catch (error) {
+                console.error("Failed to fetch job details", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchJobDetails();
+    }, [jobId]);
 
     const handleDelete = async () => {
         setIsDeleteConfirmOpen(false);
@@ -30,29 +45,25 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete }: Props) => {
         }
     };
 
-    useEffect(() => {
-        const fetchJobDetails = async () => {
-            setLoading(true); // Reset loading state when jobId changes
-            try {
-                const data = await jobApi.getJobById(jobId);
-                setJob(data);
-            } catch (error) {
-                console.error("Failed to fetch job details", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchJobDetails();
-    }, [jobId]);
-
-    // Safety: If there is no job data and we aren't loading,
-    // something went wrong, so don't render a broken UI.
-    if (!job && !loading) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop Fade */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+
+            {/* Modal Slide & Scale */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                className="relative bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 flex justify-between items-start">
                     <div>
@@ -64,17 +75,12 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete }: Props) => {
                             {!loading && job && (
                                 <>
                                     <JobStatusBadge status={job.status} />
-                                    <span className="text-sm text-slate-400">Applied on {job.applied_at}</span>
+                                    <span className="text-sm text-slate-400 font-medium">Applied on {job.applied_at}</span>
                                 </>
                             )}
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
-                    >
-                        ✕
-                    </button>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">✕</button>
                 </div>
 
                 {/* Content */}
@@ -83,28 +89,19 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete }: Props) => {
                         <div className="animate-pulse space-y-4">
                             <div className="h-4 bg-slate-200 rounded w-3/4"></div>
                             <div className="h-4 bg-slate-200 rounded"></div>
-                            <div className="h-8 bg-slate-100 rounded-2xl"></div>
-                            <div className="h-4 bg-slate-200 rounded w-5/6"></div>
-                            <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                            <div className="h-20 bg-slate-50 rounded-2xl"></div>
                         </div>
                     ) : (
                         <>
-                            {/* Contact Section - Added more defensive chaining here */}
                             <div className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Point of Contact</h3>
-                                <p className="text-slate-900 font-medium">
-                                    {job?.contact?.name || 'No contact listed'}
-                                </p>
-                                <p className="text-indigo-600 text-sm">
-                                    {job?.contact?.email || 'No email provided'}
-                                </p>
+                                <p className="text-slate-900 font-medium">{job?.contact?.name || 'No contact listed'}</p>
+                                <p className="text-indigo-600 text-sm">{job?.contact?.email || 'No email provided'}</p>
                             </div>
-
-                            {/* Description Section */}
                             <div className="prose prose-slate max-w-none">
                                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Job Description</h3>
                                 <div className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                                    {job?.job_description_text || "No description saved for this application."}
+                                    {job?.job_description_text || "No description saved."}
                                 </div>
                             </div>
                         </>
@@ -113,42 +110,32 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete }: Props) => {
 
                 {/* Footer */}
                 <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
-                    {/* Left side: Delete Action */}
-                    <button
-                        onClick={() => setIsDeleteConfirmOpen(true)}
-                        disabled={loading || isDeleting}
-                        className="text-rose-600 hover:text-rose-700 text-sm font-bold px-4 py-2 rounded-lg hover:bg-rose-50 transition-colors disabled:opacity-50"
-                    >
-                        {isDeleting ? 'Deleting...' : 'Delete Application'}
-                    </button>
-
-                    {/* Right side: External Link & Close */}
-                    <div className="flex gap-3">
-                        {!loading && job?.job_description_url && (
-                            <a
-                                href={job.job_description_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center"
-                            >
-                                Original Post ↗
-                            </a>
-                        )}
+                    <div className="flex gap-4">
                         <button
-                            onClick={onClose}
-                            className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md"
+                            onClick={() => setIsDeleteConfirmOpen(true)}
+                            disabled={loading || isDeleting}
+                            className="text-rose-600 hover:text-rose-700 text-sm font-bold px-4 py-2 rounded-lg hover:bg-rose-50 transition-colors"
                         >
-                            Close
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </button>
+                        <button
+                            onClick={() => job && onEdit(job)}
+                            disabled={loading}
+                            className="text-slate-600 hover:text-slate-900 text-sm font-bold px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+                        >
+                            Edit Details
                         </button>
                     </div>
+                    <button onClick={onClose} className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md active:scale-95">
+                        Close
+                    </button>
                 </div>
-            </div>
-            {/* The Custom Confirm Dialog */}
+            </motion.div>
+
             <ConfirmDialog
                 isOpen={isDeleteConfirmOpen}
                 title="Delete Application?"
-                message={`Are you sure you want to delete this job application? This action is permanent.`}
-                confirmText="Yes, Delete it"
+                message="This action is permanent. Are you sure?"
                 onConfirm={handleDelete}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
             />
