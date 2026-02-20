@@ -4,13 +4,11 @@ import { JobStatusBadge } from '@/features/jobs/components/JobStatusBadge';
 interface Props {
     jobs: JobApplication[];
     onViewDetails: (id: number) => void;
-    selectedIds: number[]; // New Prop
-    onSelectionChange: (ids: number[]) => void; // New Prop
+    selectedIds: number[];
+    onSelectionChange: (ids: number[]) => void;
 }
 
 export const JobTable = ({ jobs, onViewDetails, selectedIds, onSelectionChange }: Props) => {
-
-    // Helper to toggle all visible jobs
     const toggleAll = () => {
         if (selectedIds.length === jobs.length) {
             onSelectionChange([]);
@@ -19,7 +17,6 @@ export const JobTable = ({ jobs, onViewDetails, selectedIds, onSelectionChange }
         }
     };
 
-    // Helper to toggle a single job
     const toggleOne = (id: number) => {
         if (selectedIds.includes(id)) {
             onSelectionChange(selectedIds.filter(item => item !== id));
@@ -29,49 +26,49 @@ export const JobTable = ({ jobs, onViewDetails, selectedIds, onSelectionChange }
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-surface rounded-2xl border border-surface-border overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-workspace border-b border-surface-border">
                 <tr>
                     <th className="p-4 w-10">
                         <input
                             type="checkbox"
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer"
+                            className="rounded border-surface-border text-brand focus:ring-brand transition-all cursor-pointer"
                             checked={jobs.length > 0 && selectedIds.length === jobs.length}
                             onChange={toggleAll}
                         />
                     </th>
-                    <th className="p-4 text-sm font-semibold text-slate-600">Company</th>
-                    <th className="p-4 text-sm font-semibold text-slate-600">Position</th>
-                    <th className="p-4 text-sm font-semibold text-slate-600">Status</th>
-                    <th className="p-4 text-sm font-semibold text-slate-600 text-center">Applied</th>
-                    <th className="p-4 text-sm font-semibold text-slate-600 text-right">Actions</th>
+                    <th className="p-4 text-sm font-bold text-text-main opacity-60 uppercase tracking-wider">Company</th>
+                    <th className="p-4 text-sm font-bold text-text-main opacity-60 uppercase tracking-wider">Position</th>
+                    <th className="p-4 text-sm font-bold text-text-main opacity-60 uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-sm font-bold text-text-main opacity-60 uppercase tracking-wider text-center">Applied</th>
+                    <th className="p-4 text-sm font-bold text-text-main opacity-60 uppercase tracking-wider text-right">Actions</th>
                 </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-surface-border/50">
                 {jobs.map((job) => (
                     <tr
                         key={job.id}
-                        className={`hover:bg-slate-50/50 transition-colors group ${selectedIds.includes(job.id) ? 'bg-indigo-50/30' : ''}`}
+                        className={`hover:bg-brand/5 transition-colors group ${selectedIds.includes(job.id) ? 'bg-brand/10' : ''}`}
                     >
                         <td className="p-4">
                             <input
                                 type="checkbox"
-                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer"
+                                className="rounded border-surface-border text-brand focus:ring-brand transition-all cursor-pointer"
                                 checked={selectedIds.includes(job.id)}
                                 onChange={() => toggleOne(job.id)}
                             />
                         </td>
-                        <td className="p-4 font-medium text-slate-900">{job.company_name}</td>
-                        <td className="p-4 text-slate-600">{job.job_title}</td>
+                        <td className="p-4 font-bold text-text-main">{job.company_name}</td>
+                        <td className="p-4 text-text-main opacity-80">{job.job_title}</td>
                         <td className="p-4">
                             <JobStatusBadge status={job.status} />
                         </td>
-                        <td className="p-4 text-sm text-slate-500 text-center">{job.applied_at}</td>
+                        <td className="p-4 text-sm text-text-main opacity-60 text-center">{job.applied_at}</td>
                         <td className="p-4 text-right">
                             <button
                                 onClick={() => onViewDetails(job.id)}
-                                className="text-indigo-600 hover:text-indigo-800 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1 rounded-lg hover:bg-indigo-50"
+                                className="text-brand hover:text-brand-hover text-sm font-bold opacity-0 group-hover:opacity-100 transition-all px-3 py-1 rounded-lg hover:bg-brand/10"
                             >
                                 View Details
                             </button>

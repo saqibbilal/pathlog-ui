@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { jobApi } from '@/features/jobs/services/jobApi';
 import type { JobApplication } from '@/features/jobs/types';
-import { JobStatusBadge } from '@/features/jobs/components/JobStatusBadge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface Props {
@@ -24,11 +23,8 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => 
             try {
                 const data = await jobApi.getJobById(jobId);
                 setJob(data);
-            } catch (error) {
-                console.error("Failed to fetch job details", error);
-            } finally {
-                setLoading(false);
-            }
+            } catch (error) { console.error("Fetch failed", error); }
+            finally { setLoading(false); }
         };
         fetchJobDetails();
     }, [jobId]);
@@ -47,60 +43,45 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop Fade */}
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
 
-            {/* Modal Slide & Scale */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 30 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                className="relative bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                className="relative bg-surface w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-surface-border"
             >
-                {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex justify-between items-start">
+                <div className="p-6 border-b border-surface-border flex justify-between items-start">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900">
+                        <h2 className="text-2xl font-bold text-text-main">
                             {loading ? 'Loading...' : job?.company_name}
                         </h2>
-                        <p className="text-lg text-slate-600">{job?.job_title}</p>
-                        <div className="mt-2 flex gap-2">
-                            {!loading && job && (
-                                <>
-                                    <JobStatusBadge status={job.status} />
-                                    <span className="text-sm text-slate-400 font-medium">Applied on {job.applied_at}</span>
-                                </>
-                            )}
-                        </div>
+                        <p className="text-lg text-text-main opacity-70">{job?.job_title}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">✕</button>
+                    <button onClick={onClose} className="p-2 hover:bg-workspace rounded-full transition-colors text-text-main/20">✕</button>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 overflow-y-auto p-8">
                     {loading ? (
                         <div className="animate-pulse space-y-4">
-                            <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                            <div className="h-4 bg-slate-200 rounded"></div>
-                            <div className="h-20 bg-slate-50 rounded-2xl"></div>
+                            <div className="h-4 bg-surface-border rounded w-3/4"></div>
+                            <div className="h-20 bg-surface-border opacity-50 rounded-2xl"></div>
                         </div>
                     ) : (
                         <>
-                            <div className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Point of Contact</h3>
-                                <p className="text-slate-900 font-medium">{job?.contact?.name || 'No contact listed'}</p>
-                                <p className="text-indigo-600 text-sm">{job?.contact?.email || 'No email provided'}</p>
+                            <div className="mb-8 p-4 bg-workspace rounded-2xl border border-surface-border">
+                                <h3 className="text-[10px] font-bold text-text-main opacity-40 uppercase tracking-widest mb-2">Point of Contact</h3>
+                                <p className="text-text-main font-medium">{job?.contact?.name || 'No contact listed'}</p>
+                                <p className="text-brand text-sm font-bold">{job?.contact?.email || 'No email provided'}</p>
                             </div>
                             <div className="prose prose-slate max-w-none">
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Job Description</h3>
-                                <div className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                <h3 className="text-[10px] font-bold text-text-main opacity-40 uppercase tracking-widest mb-2">Job Description</h3>
+                                <div className="text-text-main opacity-80 whitespace-pre-wrap leading-relaxed text-sm">
                                     {job?.job_description_text || "No description saved."}
                                 </div>
                             </div>
@@ -108,9 +89,8 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => 
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <div className="flex gap-4">
+                <div className="p-6 border-t border-surface-border bg-workspace flex justify-between items-center">
+                    <div className="flex gap-2">
                         <button
                             onClick={() => setIsDeleteConfirmOpen(true)}
                             disabled={loading || isDeleting}
@@ -120,13 +100,12 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => 
                         </button>
                         <button
                             onClick={() => job && onEdit(job)}
-                            disabled={loading}
-                            className="text-slate-600 hover:text-slate-900 text-sm font-bold px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+                            className="text-text-main hover:text-brand text-sm font-bold px-4 py-2 rounded-lg hover:bg-surface transition-colors"
                         >
                             Edit Details
                         </button>
                     </div>
-                    <button onClick={onClose} className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md active:scale-95">
+                    <button onClick={onClose} className="px-8 py-2.5 bg-brand text-white rounded-xl font-bold text-sm hover:bg-brand-hover shadow-md transition-all active:scale-95">
                         Close
                     </button>
                 </div>

@@ -33,23 +33,18 @@ const getPageNumbers = (current: number, last: number) => {
 };
 
 export const JobsPage = () => {
-    // --- State Management ---
     const [jobs, setJobs] = useState<JobApplication[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState<JobPaginationResponse['meta'] | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [perPage, setPerPage] = useState(10);
-
     const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-
-    // Edit State
     const [jobToEdit, setJobToEdit] = useState<JobApplication | null>(null);
 
-    // --- Data Fetching ---
     const fetchJobs = useCallback(async (page = 1, currentPerPage = perPage) => {
         setLoading(true);
         try {
@@ -67,7 +62,6 @@ export const JobsPage = () => {
         fetchJobs();
     }, [fetchJobs]);
 
-    // --- Event Handlers ---
     const handleBulkDelete = async () => {
         setIsDeleteConfirmOpen(false);
         try {
@@ -89,7 +83,7 @@ export const JobsPage = () => {
 
     const handleDeleteSuccess = () => {
         setIsModalOpen(false);
-        setTimeout(() => setSelectedJobId(null), 300); // Clear after animation
+        setTimeout(() => setSelectedJobId(null), 300);
         fetchJobs(pagination?.current_page || 1);
     };
 
@@ -101,7 +95,6 @@ export const JobsPage = () => {
 
     const handleEditTrigger = (job: JobApplication) => {
         setIsModalOpen(false);
-        // Delay opening the slideover until modal is gone
         setTimeout(() => {
             setJobToEdit(job);
             setIsAddOpen(true);
@@ -111,39 +104,34 @@ export const JobsPage = () => {
 
     return (
         <div className="max-w-6xl mx-auto pb-20 px-4">
-            {/* Header Section */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Job Log</h1>
-                    <p className="text-slate-500">Manage and track your active applications.</p>
+                    <h1 className="text-3xl font-bold text-text-main tracking-tight">Job Log</h1>
+                    <p className="opacity-60 text-text-main">Manage and track your active applications.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {selectedIds.length > 0 && (
                         <button
                             onClick={() => setIsDeleteConfirmOpen(true)}
-                            className="bg-rose-50 text-rose-600 px-5 py-2.5 rounded-xl font-bold hover:bg-rose-100 transition-all border border-rose-100 flex items-center gap-2"
+                            className="bg-rose-500/10 text-rose-600 px-5 py-2.5 rounded-xl font-bold hover:bg-rose-600 hover:text-white transition-all border border-rose-200"
                         >
-                            <span>🗑️</span> Delete ({selectedIds.length})
+                            🗑️ Delete ({selectedIds.length})
                         </button>
                     )}
 
                     <button
-                        onClick={() => {
-                            setJobToEdit(null);
-                            setIsAddOpen(true);
-                        }}
-                        className="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                        onClick={() => { setJobToEdit(null); setIsAddOpen(true); }}
+                        className="bg-brand text-white px-6 py-2.5 rounded-xl font-bold hover:bg-brand-hover transition-all shadow-lg shadow-brand/20 active:scale-95"
                     >
                         + Add New Job
                     </button>
                 </div>
             </div>
 
-            {/* Table Section */}
             {jobs.length > 0 || loading ? (
                 <>
-                    <div className={`${loading ? 'opacity-50 pointer-events-none cursor-wait' : ''} transition-opacity duration-200`}>
+                    <div className={`${loading ? 'opacity-50 pointer-events-none' : ''} transition-opacity duration-200`}>
                         <JobTable
                             jobs={jobs}
                             selectedIds={selectedIds}
@@ -152,56 +140,49 @@ export const JobsPage = () => {
                         />
                     </div>
 
-                    {/* Pagination Bar */}
                     {pagination && (
-                        <div className="mt-8 flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                            <div className="flex items-center gap-1 min-h-[40px]">
-                                {pagination.last_page > 1 ? (
-                                    <>
+                        <div className="mt-8 flex items-center justify-between bg-surface p-4 rounded-2xl border border-surface-border shadow-sm">
+                            <div className="flex items-center gap-1">
+                                <button
+                                    disabled={pagination.current_page === 1}
+                                    onClick={() => fetchJobs(pagination.current_page - 1)}
+                                    className="p-2 text-brand hover:bg-brand/10 rounded-lg disabled:opacity-20 transition-colors"
+                                >
+                                    ←
+                                </button>
+                                <div className="flex gap-1">
+                                    {getPageNumbers(pagination.current_page, pagination.last_page).map((page, idx) => (
                                         <button
-                                            disabled={pagination.current_page === 1}
-                                            onClick={() => fetchJobs(pagination.current_page - 1)}
-                                            className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-10 transition-colors"
+                                            key={idx}
+                                            disabled={page === '...'}
+                                            onClick={() => typeof page === 'number' && fetchJobs(page)}
+                                            className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                                                page === pagination.current_page
+                                                    ? 'bg-brand text-white shadow-md'
+                                                    : 'text-text-main hover:bg-brand/10'
+                                            }`}
                                         >
-                                            ←
+                                            {page}
                                         </button>
-                                        <div className="flex gap-1">
-                                            {getPageNumbers(pagination.current_page, pagination.last_page).map((page, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    disabled={page === '...'}
-                                                    onClick={() => typeof page === 'number' && fetchJobs(page)}
-                                                    className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                                                        page === pagination.current_page
-                                                            ? 'bg-indigo-600 text-white shadow-md'
-                                                            : 'text-slate-600 hover:bg-slate-50'
-                                                    }`}
-                                                >
-                                                    {page}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <button
-                                            disabled={pagination.current_page === pagination.last_page}
-                                            onClick={() => fetchJobs(pagination.current_page + 1)}
-                                            className="p-2 text-slate-400 hover:text-indigo-600 disabled:opacity-10 transition-colors"
-                                        >
-                                            →
-                                        </button>
-                                    </>
-                                ) : (
-                                    <span className="text-xs text-slate-400 font-medium px-2 italic">All caught up</span>
-                                )}
+                                    ))}
+                                </div>
+                                <button
+                                    disabled={pagination.current_page === pagination.last_page}
+                                    onClick={() => fetchJobs(pagination.current_page + 1)}
+                                    className="p-2 text-brand hover:bg-brand/10 rounded-lg disabled:opacity-20 transition-colors"
+                                >
+                                    →
+                                </button>
                             </div>
 
                             <div className="flex items-center gap-6">
-                                <span className="text-sm text-slate-400 font-medium italic">
+                                <span className="text-sm text-text-main opacity-60 italic">
                                     {pagination.total > 0 ? `Showing ${pagination.from}-${pagination.to} of ${pagination.total}` : 'No entries'}
                                 </span>
-                                <div className="flex items-center gap-2 border-l border-slate-100 pl-6">
-                                    <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Per Page:</span>
+                                <div className="flex items-center gap-2 border-l border-surface-border pl-6">
+                                    <span className="text-xs text-text-main opacity-50 uppercase font-bold tracking-wider">Per Page:</span>
                                     <select
-                                        className="text-xs border-slate-100 rounded-lg bg-slate-50 text-slate-500 py-1"
+                                        className="text-xs border-surface-border rounded-lg bg-workspace text-text-main py-1 px-2 outline-none focus:ring-2 focus:ring-brand/20"
                                         value={perPage}
                                         onChange={handlePerPageChange}
                                     >
@@ -215,12 +196,11 @@ export const JobsPage = () => {
                     )}
                 </>
             ) : (
-                <div className="text-center p-20 bg-white rounded-3xl border-2 border-dashed border-slate-100">
-                    <p className="text-slate-500 font-medium">Start your journey by adding your first job lead!</p>
+                <div className="text-center p-20 bg-surface rounded-3xl border-2 border-dashed border-surface-border">
+                    <p className="text-text-main opacity-60 font-medium">Your journey starts here. Add your first application!</p>
                 </div>
             )}
 
-            {/* MODAL WRAPPED IN ANIMATEPRESENCE FOR SMOOTH EXIT */}
             <AnimatePresence>
                 {isModalOpen && selectedJobId && (
                     <JobDetailsModal
@@ -236,10 +216,7 @@ export const JobsPage = () => {
             <AddJobSlideOver
                 isOpen={isAddOpen}
                 jobToEdit={jobToEdit}
-                onClose={() => {
-                    setIsAddOpen(false);
-                    setJobToEdit(null);
-                }}
+                onClose={() => { setIsAddOpen(false); setJobToEdit(null); }}
                 onSuccess={handleSuccess}
             />
 
@@ -248,7 +225,7 @@ export const JobsPage = () => {
             <ConfirmDialog
                 isOpen={isDeleteConfirmOpen}
                 title="Delete Applications?"
-                message={`Are you sure you want to delete ${selectedIds.length} applications?`}
+                message={`Are you sure you want to delete ${selectedIds.length} applications? This action is permanent.`}
                 onConfirm={handleBulkDelete}
                 onCancel={() => setIsDeleteConfirmOpen(false)}
             />
