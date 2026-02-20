@@ -7,41 +7,50 @@ export const Layout = () => {
 
     useEffect(() => {
         const handleWallpaperChange = () => {
+            console.log("Layout received wallpaper-updated event!"); // Add this to debug
             setWallpaper(localStorage.getItem('pathlog-wallpaper') || '');
         };
 
-        // Listen for the custom event we dispatch in SettingsPage
         window.addEventListener('wallpaper-updated', handleWallpaperChange);
-
         return () => window.removeEventListener('wallpaper-updated', handleWallpaperChange);
     }, []);
 
     return (
-        <div className="flex min-h-screen relative">
-            {/* Background Wallpaper Layer */}
+        <div className="flex min-h-screen relative overflow-hidden bg-workspace">
+            {/* 1. THE WALLPAPER */}
             {wallpaper && (
                 <div
-                    className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-700"
+                    className="fixed inset-0 pointer-events-none transition-all duration-1000"
                     style={{
                         backgroundImage: `url(${wallpaper})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        opacity: 0.4 // Softened so text is readable
+                        zIndex: 0,
+                        // We keep a slight brightness drop so white cards still "pop"
+                        filter: 'brightness(0.85)',
                     }}
                 >
-                    {/* Subtle Blur/Overlay to ensure table readability */}
-                    <div className="absolute inset-0 bg-workspace/60 backdrop-blur-[1px]" />
+                    {/* 2. THE SHARP OVERLAY */}
+                    <div
+                        className="absolute inset-0"
+                        style={{
+                            // A very subtle tint that matches your theme, but NO blur
+                            background: `linear-gradient(to bottom, transparent, var(--workspace-bg))`,
+                            opacity: 0.4
+                        }}
+                    />
                 </div>
             )}
 
-            <Sidebar />
-
-            {/* Main Content: z-10 ensures it stays above the wallpaper */}
-            <main className="flex-1 ml-64 p-8 min-h-screen relative z-10">
-                <div className="max-w-6xl mx-auto">
-                    <Outlet />
-                </div>
-            </main>
+            {/* 3. THE UI (Top) */}
+            <div className="relative z-10 flex w-full">
+                <Sidebar />
+                <main className="flex-1 ml-64 p-8 min-h-screen">
+                    <div className="max-w-6xl mx-auto">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
         </div>
     );
 };

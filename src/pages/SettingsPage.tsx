@@ -29,8 +29,14 @@ export const SettingsPage = () => {
     };
 
     const updateWallpaper = (url: string) => {
+        // 1. Update local state (for the preview)
         setWallpaper(url);
+
+        // 2. Update storage (for the Layout and persistence)
         localStorage.setItem('pathlog-wallpaper', url);
+
+        // 3. SHOUT to the rest of the app
+        console.log("Dispatching wallpaper-updated event..."); // Add this to debug
         window.dispatchEvent(new Event('wallpaper-updated'));
     };
 
