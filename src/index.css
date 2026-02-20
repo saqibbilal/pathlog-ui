@@ -1,1 +1,83 @@
 @import "tailwindcss";
+
+@theme {
+    --color-brand: var(--brand-primary);
+    --color-brand-hover: var(--brand-secondary);
+    --color-workspace: var(--workspace-bg);
+    --color-sidebar: var(--sidebar-bg);
+    --color-sidebar-text: var(--sidebar-text);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-surface: var(--surface-bg);
+    --color-surface-border: var(--surface-border);
+    --color-text-main: var(--text-main);
+}
+
+/* 1. Boreal Teal (New Default - Fresh & Modern) */
+:root {
+    --brand-primary: #0d9488; /* Teal 600 */
+    --brand-secondary: #0f766e; /* Teal 700 */
+    --workspace-bg: #f0f9f9;
+    --surface-bg: #ffffff;
+    --surface-border: #ccf2f4;
+    --text-main: #134e4a;
+    --sidebar-bg: #134e4a; /* Deep Teal Sidebar */
+    --sidebar-text: #f0f9f9;
+    --sidebar-border: #115e59;
+}
+
+/* 2. Jade Forest (Sage 2.0) */
+[data-theme='jade'] {
+    --brand-primary: #3d9970;
+    --brand-secondary: #2d7254;
+    --workspace-bg: #f0fdf4;
+    --surface-bg: #ffffff;
+    --surface-border: #dcfce7;
+    --text-main: #064e3b;
+    --sidebar-bg: #dcfce7;
+    --sidebar-text: #166534;
+}
+
+/* 3. Clean Executive (Professional Slate) */
+[data-theme='executive'] {
+    --brand-primary: #4f46e5;
+    --brand-secondary: #4338ca;
+    --workspace-bg: #f1f5f9;
+    --surface-bg: #ffffff;
+    --surface-border: #cbd5e1;
+    --text-main: #0f172a;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #f8fafc;
+    --sidebar-border: #1e293b;
+}
+
+/* 4. Midnight (Deep Matte Violet) */
+[data-theme='night'] {
+    --brand-primary: #8b5cf6; /* Deeper, less vibrant violet */
+    --brand-secondary: #7c3aed;
+    --workspace-bg: #020617;
+    --surface-bg: #0f172a;
+    --surface-border: #1e293b;
+    --text-main: #f1f5f9;
+    --sidebar-bg: #0f172a; /*#020617*/
+    --sidebar-text: #94a3b8;
+    --sidebar-border: #0f172a;
+}
+
+
+/* 5. Desert Sand (Warm & Calm) */
+[data-theme='sand'] {
+    --brand-primary: #d69a3c;
+    --brand-secondary: #a3762e;
+    --workspace-bg: #fdf8f3;
+    --surface-bg: #ffffff;
+    --surface-border: #f3e5d8;
+    --text-main: #4a3325;
+    --sidebar-bg: #fdf8f3;
+    --sidebar-text: #b89b82;
+}
+
+body {
+    background-color: var(--workspace-bg);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}

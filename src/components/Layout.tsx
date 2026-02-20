@@ -1,51 +1,46 @@
-import { useAuthStore } from '@/store/useAuthStore';
-import { Outlet, Link } from 'react-router-dom';
-import { authApi } from '@/features/auth/services/authApi';
+import { useEffect, useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { Sidebar } from './Sidebar';
 
 export const Layout = () => {
-    const user = useAuthStore((state) => state.user);
-    const logout = useAuthStore((state) => state.logout);
+    const [wallpaper, setWallpaper] = useState(localStorage.getItem('pathlog-wallpaper') || '');
 
-    const handleLogout = async () => {
-        try {
-            // Attempt to tell Laravel to kill the token
-            await authApi.logout();
-        } catch (error) {
-            // Even if the server is down or the token is already invalid,
-            // we catch the error so the next line still runs.
-            console.error("Backend logout failed:", error);
-        } finally {
-            // This MUST run. It clears Zustand and redirects the user via ProtectedRoute logic.
-            logout();
-        }
-    };
+    useEffect(() => {
+        const handleWallpaperChange = () => {
+            setWallpaper(localStorage.getItem('pathlog-wallpaper') || '');
+        };
+
+        // Listen for the custom event we dispatch in SettingsPage
+        window.addEventListener('wallpaper-updated', handleWallpaperChange);
+
+        return () => window.removeEventListener('wallpaper-updated', handleWallpaperChange);
+    }, []);
 
     return (
-        <div className="flex min-h-screen bg-slate-50">
-            {/* Sidebar: Fixed Rectangle on the Left */}
-            <aside className="w-64 bg-slate-900 text-white fixed h-full flex flex-col">
-                <div className="p-6 text-2xl font-bold tracking-tight">PathLog</div>
-
-                <nav className="flex-1 px-4 space-y-2">
-                    <Link to="/dashboard" className="block p-3 hover:bg-slate-800 rounded-xl transition-colors">Dashboard</Link>
-                    <Link to="/jobs" className="block p-3 hover:bg-slate-800 rounded-xl transition-colors">Job Log</Link>
-                </nav>
-
-                <div className="p-4 border-t border-slate-800">
-                    <div className="text-sm text-slate-400">Logged in as:</div>
-                    <div className="font-medium truncate">{user?.name}</div>
-                    <button
-                        onClick={handleLogout}
-                        className="mt-4 w-full py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-bold"
-                    >
-                        Logout
-                    </button>
+        <div className="flex min-h-screen relative">
+            {/* Background Wallpaper Layer */}
+            {wallpaper && (
+                <div
+                    className="fixed inset-0 z-0 pointer-events-none transition-opacity duration-700"
+                    style={{
+                        backgroundImage: `url(${wallpaper})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        opacity: 0.4 // Softened so text is readable
+                    }}
+                >
+                    {/* Subtle Blur/Overlay to ensure table readability */}
+                    <div className="absolute inset-0 bg-workspace/60 backdrop-blur-[1px]" />
                 </div>
-            </aside>
+            )}
 
-            {/* Main Content: Pushed to the right by the sidebar width */}
-            <main className="flex-1 ml-64 p-8">
-                <Outlet />
+            <Sidebar />
+
+            {/* Main Content: z-10 ensures it stays above the wallpaper */}
+            <main className="flex-1 ml-64 p-8 min-h-screen relative z-10">
+                <div className="max-w-6xl mx-auto">
+                    <Outlet />
+                </div>
             </main>
         </div>
     );

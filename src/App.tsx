@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { GuestRoute } from './components/GuestRoute';
+import LoginPage from '@/pages/LoginPage';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { GuestRoute } from '@/components/GuestRoute';
 import { Layout } from '@/components/Layout';
-import { JobsPage } from './pages/JobsPage'; // Import the page we just built
+import { JobsPage } from '@/pages/JobsPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 
 function App() {
     return (
@@ -20,6 +21,7 @@ function App() {
                         {/* Use the dedicated components for each route */}
                         <Route path="/dashboard" element={<DashboardHome />} />
                         <Route path="/jobs" element={<JobsPage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
                     </Route>
                 </Route>
 
