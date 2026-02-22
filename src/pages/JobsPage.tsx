@@ -1,10 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { jobApi } from '@/features/jobs/services/jobApi';
+import type { JobFilters } from '@/features/jobs/services/jobApi';
 import type { JobApplication, JobPaginationResponse } from '@/features/jobs/types';
 import { JobTable } from '@/features/jobs/components/JobTable';
 import { JobDetailsModal } from '@/features/jobs/components/JobDetailsModal';
 import { AddJobSlideOver } from '@/features/jobs/components/AddJobSlideOver';
+import { JobSearchFilter } from '@/features/jobs/components/JobSearchFilter';
 import { SuccessToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
@@ -37,7 +40,6 @@ export const JobsPage = () => {
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState<JobPaginationResponse['meta'] | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [perPage, setPerPage] = useState(10);
     const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -45,29 +47,72 @@ export const JobsPage = () => {
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [jobToEdit, setJobToEdit] = useState<JobApplication | null>(null);
 
-    const fetchJobs = useCallback(async (page = 1, currentPerPage = perPage) => {
+    // Filter sync from URL
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentPageStr = searchParams.get('page');
+    // We treat the URL page as absolute truth for where we are. Default to 1.
+    const urlPage = currentPageStr ? parseInt(currentPageStr, 10) : 1;
+
+    const currentPerPageStr = searchParams.get('per_page');
+    const urlPerPage = currentPerPageStr ? parseInt(currentPerPageStr, 10) : 10;
+
+    // Abort controller var to handle the debounce race condition
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    const fetchJobs = useCallback(async (page = urlPage, currentPerPage = urlPerPage) => {
         setLoading(true);
+
+        // 1. Cancel previous pending request to avoid Race Conditions
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // 2. Create a fresh controller for this specific request
+        const currentController = new AbortController();
+        abortControllerRef.current = currentController;
+
         try {
-            const response = await jobApi.getJobs(page, currentPerPage);
+            const filters: JobFilters = {
+                search: searchParams.get('search') || undefined,
+                status: searchParams.get('status') || undefined,
+                date_applied: searchParams.get('date_applied') || undefined,
+            };
+
+            const response = await jobApi.getJobs(page, currentPerPage, filters, currentController.signal);
             setJobs(response.data);
             setPagination(response.meta);
-        } catch (error) {
+        } catch (error: any) {
+            // Ignore cancelation errors explicitly
+            if (error.name === 'CanceledError' || error.message?.includes('canceled')) {
+                return;
+            }
             console.error("Failed to fetch jobs", error);
         } finally {
-            setLoading(false);
+            // Only stop loading if THIS request is still the active one
+            if (abortControllerRef.current === currentController) {
+                setLoading(false);
+            }
         }
-    }, [perPage]);
+    }, [urlPerPage, searchParams, urlPage]);
 
+    // Re-fetch whenever deeply linked parameters change 
     useEffect(() => {
-        fetchJobs();
-    }, [fetchJobs]);
+        fetchJobs(urlPage);
+
+        // Cleanup loop for unmounting
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, [searchParams]); // Re-run when URL search tracking changes
 
     const handleBulkDelete = async () => {
         setIsDeleteConfirmOpen(false);
         try {
             await jobApi.bulkDeleteJobs(selectedIds);
             setSelectedIds([]);
-            fetchJobs(pagination?.current_page || 1);
+            fetchJobs(); // Respects urlPage internally now
         } catch (error) {
             console.error("Bulk delete failed", error);
         }
@@ -76,7 +121,7 @@ export const JobsPage = () => {
     const handleSuccess = () => {
         setIsAddOpen(false);
         setJobToEdit(null);
-        fetchJobs(pagination?.current_page || 1);
+        fetchJobs();
         setShowToast(true);
         setTimeout(() => setShowToast(false), 4000);
     };
@@ -84,13 +129,19 @@ export const JobsPage = () => {
     const handleDeleteSuccess = () => {
         setIsModalOpen(false);
         setTimeout(() => setSelectedJobId(null), 300);
-        fetchJobs(pagination?.current_page || 1);
+        fetchJobs();
     };
 
     const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newPerPage = Number(e.target.value);
-        setPerPage(newPerPage);
-        fetchJobs(1, newPerPage);
+        const newPerPage = e.target.value;
+
+        // Reset URL page strictly, and set new layout limit
+        setSearchParams(prev => {
+            const params = new URLSearchParams(prev);
+            params.set('page', '1');
+            params.set('per_page', newPerPage);
+            return params;
+        });
     };
 
     const handleEditTrigger = (job: JobApplication) => {
@@ -111,6 +162,8 @@ export const JobsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <JobSearchFilter />
+
                     {selectedIds.length > 0 && (
                         <button
                             onClick={() => setIsDeleteConfirmOpen(true)}
@@ -145,7 +198,13 @@ export const JobsPage = () => {
                             <div className="flex items-center gap-1">
                                 <button
                                     disabled={pagination.current_page === 1}
-                                    onClick={() => fetchJobs(pagination.current_page - 1)}
+                                    onClick={() => {
+                                        setSearchParams(prev => {
+                                            const p = new URLSearchParams(prev);
+                                            p.set('page', (pagination.current_page - 1).toString());
+                                            return p;
+                                        });
+                                    }}
                                     className="p-2 text-brand hover:bg-brand/10 rounded-lg disabled:opacity-20 transition-colors"
                                 >
                                     ←
@@ -155,12 +214,19 @@ export const JobsPage = () => {
                                         <button
                                             key={idx}
                                             disabled={page === '...'}
-                                            onClick={() => typeof page === 'number' && fetchJobs(page)}
-                                            className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                                                page === pagination.current_page
-                                                    ? 'bg-brand text-white shadow-md'
-                                                    : 'text-text-main hover:bg-brand/10'
-                                            }`}
+                                            onClick={() => {
+                                                if (typeof page === 'number') {
+                                                    setSearchParams(prev => {
+                                                        const p = new URLSearchParams(prev);
+                                                        p.set('page', page.toString());
+                                                        return p;
+                                                    });
+                                                }
+                                            }}
+                                            className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all ${page === pagination.current_page
+                                                ? 'bg-brand text-white shadow-md'
+                                                : 'text-text-main hover:bg-brand/10'
+                                                }`}
                                         >
                                             {page}
                                         </button>
@@ -168,7 +234,13 @@ export const JobsPage = () => {
                                 </div>
                                 <button
                                     disabled={pagination.current_page === pagination.last_page}
-                                    onClick={() => fetchJobs(pagination.current_page + 1)}
+                                    onClick={() => {
+                                        setSearchParams(prev => {
+                                            const p = new URLSearchParams(prev);
+                                            p.set('page', (pagination.current_page + 1).toString());
+                                            return p;
+                                        });
+                                    }}
                                     className="p-2 text-brand hover:bg-brand/10 rounded-lg disabled:opacity-20 transition-colors"
                                 >
                                     →
@@ -182,8 +254,8 @@ export const JobsPage = () => {
                                 <div className="flex items-center gap-2 border-l border-surface-border pl-6">
                                     <span className="text-xs text-text-main opacity-50 uppercase font-bold tracking-wider">Per Page:</span>
                                     <select
-                                        className="text-xs border-surface-border rounded-lg bg-workspace text-text-main py-1 px-2 outline-none focus:ring-2 focus:ring-brand/20"
-                                        value={perPage}
+                                        className="text-xs border border-surface-border rounded-lg bg-workspace text-text-main py-1.5 px-3 outline-none focus:ring-2 focus:ring-brand/30 transition-all font-bold cursor-pointer hover:border-brand/50 shadow-sm"
+                                        value={urlPerPage}
                                         onChange={handlePerPageChange}
                                     >
                                         <option value="10">10</option>
@@ -197,7 +269,14 @@ export const JobsPage = () => {
                 </>
             ) : (
                 <div className="text-center p-20 bg-surface rounded-3xl border-2 border-dashed border-surface-border">
-                    <p className="text-text-main opacity-60 font-medium">Your journey starts here. Add your first application!</p>
+                    {searchParams.get('search') || searchParams.get('status') || searchParams.get('date_applied') ? (
+                        <>
+                            <p className="text-text-main opacity-80 font-bold mb-2">No applications found matching your filters.</p>
+                            <p className="text-text-main opacity-60 text-sm">Try tweaking your search or clearing active filters to see more results.</p>
+                        </>
+                    ) : (
+                        <p className="text-text-main opacity-60 font-medium">Your journey starts here. Add your first application!</p>
+                    )}
                 </div>
             )}
 
