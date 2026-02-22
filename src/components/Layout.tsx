@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import { useGetSettings } from '@/features/settings/hooks/useSettings';
 
 export const Layout = () => {
-    const [wallpaper, setWallpaper] = useState(localStorage.getItem('pathlog-wallpaper') || '');
+    const { data: settings } = useGetSettings();
+    const wallpaper = settings?.wallpaper_url || '';
 
+    // Apply theme globally across the authenticated app
     useEffect(() => {
-        const handleWallpaperChange = () => {
-            console.log("Layout received wallpaper-updated event!"); // Add this to debug
-            setWallpaper(localStorage.getItem('pathlog-wallpaper') || '');
-        };
-
-        window.addEventListener('wallpaper-updated', handleWallpaperChange);
-        return () => window.removeEventListener('wallpaper-updated', handleWallpaperChange);
-    }, []);
+        if (settings?.theme) {
+            localStorage.setItem('pathlog-theme', settings.theme);
+            document.documentElement.removeAttribute('data-theme');
+            if (settings.theme !== 'default') {
+                document.documentElement.setAttribute('data-theme', settings.theme);
+            }
+        }
+    }, [settings?.theme]);
 
     return (
         <div className="flex min-h-screen relative overflow-hidden bg-workspace">
@@ -22,7 +25,7 @@ export const Layout = () => {
                 <div
                     className="fixed inset-0 pointer-events-none transition-all duration-1000"
                     style={{
-                        backgroundImage: `url(${wallpaper})`,
+                        backgroundImage: `url("${wallpaper}")`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         zIndex: 0,
