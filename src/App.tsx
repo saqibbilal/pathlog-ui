@@ -1,37 +1,45 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { GuestRoute } from '@/components/GuestRoute';
+import { GlobalToast } from './components/ui/GlobalToast';
 import { Layout } from '@/components/Layout';
 import { JobsPage } from '@/pages/JobsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
+const queryClient = new QueryClient();
+
 function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                {/* GUEST ONLY ROUTES */}
-                <Route element={<GuestRoute />}>
-                    <Route path="/login" element={<LoginPage />} />
-                </Route>
-
-                {/* AUTH ONLY ROUTES */}
-                <Route element={<ProtectedRoute />}>
-                    <Route element={<Layout />}>
-                        {/* Use the dedicated components for each route */}
-                        <Route path="/dashboard" element={<DashboardHome />} />
-                        <Route path="/jobs" element={<JobsPage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
+        <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+                <GlobalToast />
+                <Routes>
+                    {/* GUEST ONLY ROUTES */}
+                    <Route element={<GuestRoute />}>
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
                     </Route>
-                </Route>
 
-                {/* GLOBAL REDIRECT */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-        </BrowserRouter>
+                    {/* AUTH ONLY ROUTES */}
+                    <Route element={<ProtectedRoute />}>
+                        <Route element={<Layout />}>
+                            {/* Use the dedicated components for each route */}
+                            <Route path="/dashboard" element={<DashboardHome />} />
+                            <Route path="/jobs" element={<JobsPage />} />
+                            <Route path="/settings" element={<SettingsPage />} />
+                        </Route>
+                    </Route>
+
+                    {/* GLOBAL REDIRECT */}
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+            </BrowserRouter>
+        </QueryClientProvider>
     );
 }
-
 const DashboardHome = () => (
     <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Overview</h1>

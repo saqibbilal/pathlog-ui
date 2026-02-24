@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/Input';
-import { useLogin } from '../hooks/useAuth';
+import { useRegister } from '../hooks/useAuth';
 
-export const LoginForm = () => {
+export const RegisterForm = () => {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
 
-    // We pull everything from our custom hook
-    const { mutate: login, isPending, error } = useLogin();
+    const { mutate: register, isPending, error } = useRegister();
 
-    // Safely extract error message from the TanStack error object
     const axiosError = error as any;
     const errorMessage = axiosError?.response?.data?.message || null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Trigger the mutation defined in our hook
-        login({ email, password });
+        register({ name, email, password, password_confirmation: passwordConfirmation });
     };
 
     return (
@@ -25,7 +24,7 @@ export const LoginForm = () => {
                 <h2 className="text-4xl font-black text-text-main tracking-tighter">
                     Path<span className="text-brand">Log</span>
                 </h2>
-                <p className="text-text-main opacity-60 mt-3 font-medium text-lg">Your career journey, logged.</p>
+                <p className="text-text-main opacity-60 mt-3 font-medium text-lg">Start tracking your journey.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -34,6 +33,15 @@ export const LoginForm = () => {
                         {errorMessage}
                     </div>
                 )}
+
+                <Input
+                    label="Full Name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
 
                 <Input
                     label="Email Address"
@@ -53,17 +61,26 @@ export const LoginForm = () => {
                     required
                 />
 
+                <Input
+                    label="Confirm Password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={passwordConfirmation}
+                    onChange={(e) => setPasswordConfirmation(e.target.value)}
+                    required
+                />
+
                 <button
                     type="submit"
                     disabled={isPending}
                     className="w-full py-4 px-6 bg-brand hover:bg-brand-hover text-white font-bold rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-brand/20 disabled:opacity-50"
                 >
-                    {isPending ? 'Verifying...' : 'Sign In'}
+                    {isPending ? 'Creating Account...' : 'Sign Up'}
                 </button>
             </form>
 
             <p className="text-center mt-8 text-text-main opacity-50 text-sm font-medium">
-                Don't have an account? <a href="/register" className="text-brand font-bold hover:underline">Sign up</a>
+                Already have an account? <a href="/login" className="text-brand font-bold hover:underline">Sign in</a>
             </p>
         </div>
     );

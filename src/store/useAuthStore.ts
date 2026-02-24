@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type {User} from '@/features/auth/types'; // Using the alias!
+import type { User } from '@/features/auth/types'; // Using the alias!
 
 interface AuthState {
     user: User | null;
@@ -8,6 +8,7 @@ interface AuthState {
     isAuthenticated: boolean;
     setAuth: (user: User, token: string) => void;
     logout: () => void;
+    updateUser: (updates: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,6 +27,9 @@ export const useAuthStore = create<AuthState>()(
                 token: null,
                 isAuthenticated: false
             }),
+            updateUser: (updates) => set((state) => ({
+                user: state.user ? { ...state.user, ...updates } : null
+            })),
         }),
         {
             name: 'pathlog-auth-storage',
