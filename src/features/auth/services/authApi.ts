@@ -1,6 +1,6 @@
 // src/features/auth/services/authApi.ts
 import api from '@/api/axios';
-import type { LoginCredentials, AuthResponse } from '@/features/auth/types';
+import type { LoginCredentials, RegisterCredentials, AuthResponse } from '@/features/auth/types';
 
 
 export const authApi = {
@@ -9,6 +9,11 @@ export const authApi = {
         const response = await api.post('/login', credentials);
 
         // We expect Laravel to return { user: {...}, token: "..." }
+        return response.data;
+    },
+
+    register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+        const response = await api.post('/register', credentials);
         return response.data;
     },
 
