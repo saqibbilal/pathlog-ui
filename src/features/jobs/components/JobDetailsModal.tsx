@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { jobApi } from '@/features/jobs/services/jobApi';
+import { useGetJob, useDeleteJob } from '@/features/jobs/hooks/useJobs';
 import type { JobApplication } from '@/features/jobs/types';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
@@ -12,32 +12,18 @@ interface Props {
 }
 
 export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => {
-    const [job, setJob] = useState<JobApplication | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchJobDetails = async () => {
-            setLoading(true);
-            try {
-                const data = await jobApi.getJobById(jobId);
-                setJob(data);
-            } catch (error) { console.error("Fetch failed", error); }
-            finally { setLoading(false); }
-        };
-        fetchJobDetails();
-    }, [jobId]);
+    const { data: job, isLoading: loading } = useGetJob(jobId);
+    const { mutateAsync: deleteJobAsync, isPending: isDeleting } = useDeleteJob();
 
     const handleDelete = async () => {
         setIsDeleteConfirmOpen(false);
-        setIsDeleting(true);
         try {
-            await jobApi.deleteJob(jobId);
+            await deleteJobAsync(jobId);
             onDelete();
         } catch (error) {
             console.error("Delete failed", error);
-            setIsDeleting(false);
         }
     };
 

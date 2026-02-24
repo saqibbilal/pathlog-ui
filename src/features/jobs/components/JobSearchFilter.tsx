@@ -109,18 +109,34 @@ export const JobSearchFilter = () => {
             </div>
 
             {/* FILTER DROPDOWN TRIGGER */}
-            <button
-                onClick={() => setIsFilterOpen(true)}
-                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${isFilterOpen || activeStatus || activeDate
-                    ? 'bg-brand/10 border-brand/30 text-brand'
-                    : 'bg-surface border-surface-border text-text-main hover:border-text-main/20'
-                    }`}
-            >
-                <span>⚙️ Filters</span>
-                {(activeStatus || activeDate) && (
-                    <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-brand rounded-full border-2 border-workspace shadow-sm shadow-brand/20"></span>
-                )}
-            </button>
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => setIsFilterOpen(true)}
+                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${isFilterOpen || activeStatus || activeDate
+                        ? 'bg-brand/10 border-brand/30 text-brand'
+                        : 'bg-surface border-surface-border text-text-main hover:border-text-main/20'
+                        }`}
+                >
+                    <span>⚙️ Filters</span>
+                    {(activeStatus || activeDate) && (
+                        <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-brand rounded-full border-2 border-workspace shadow-sm shadow-brand/20"></span>
+                    )}
+                </button>
+
+                <AnimatePresence>
+                    {hasActiveFilters && (
+                        <motion.button
+                            initial={{ opacity: 0, width: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, width: 'auto', scale: 1 }}
+                            exit={{ opacity: 0, width: 0, scale: 0.8 }}
+                            onClick={handleClearAll}
+                            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white transition-all text-sm font-bold whitespace-nowrap"
+                        >
+                            ✕ Clear
+                        </motion.button>
+                    )}
+                </AnimatePresence>
+            </div>
 
             <AnimatePresence>
                 {isFilterOpen && (
