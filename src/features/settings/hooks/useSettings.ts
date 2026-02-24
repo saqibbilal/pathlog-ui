@@ -13,7 +13,7 @@ export const useUpdateSettings = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (settings: Partial<UserSettings>) => settingsApi.updateSettings(settings),
+        mutationFn: (settings: Partial<UserSettings> | any) => settingsApi.updateSettings(settings),
         onSuccess: (data) => {
             queryClient.setQueryData(['settings'], data);
         },

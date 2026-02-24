@@ -1,6 +1,7 @@
 
 import { ThemeSelector } from '@/features/settings/components/ThemeSelector';
 import { WallpaperUploader } from '@/features/settings/components/WallpaperUploader';
+import { ProfileSettings } from '@/features/settings/components/ProfileSettings';
 import { useGetSettings, useUpdateSettings, useUploadWallpaper } from '@/features/settings/hooks/useSettings';
 
 export const SettingsPage = () => {
@@ -44,6 +45,13 @@ export const SettingsPage = () => {
             </header>
 
             <section className="space-y-8">
+                {settings && (
+                    <ProfileSettings
+                        settings={settings}
+                        isLoading={updateSettingsMutation.isPending}
+                    />
+                )}
+
                 <ThemeSelector
                     currentTheme={settings?.theme || localStorage.getItem('pathlog-theme') || 'default'}
                     onUpdateTheme={handleUpdateTheme}

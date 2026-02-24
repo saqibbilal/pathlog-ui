@@ -7,7 +7,7 @@ export const settingsApi = {
         return response.data.data;
     },
 
-    updateSettings: async (settings: Partial<UserSettings>): Promise<UserSettings> => {
+    updateSettings: async (settings: Partial<UserSettings> | any): Promise<UserSettings> => {
         const response = await api.put('/settings', settings);
         return response.data.data;
     },

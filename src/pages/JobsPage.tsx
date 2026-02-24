@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { jobApi } from '@/features/jobs/services/jobApi';
+import { useGetJobs, useBulkDeleteJobs } from '@/features/jobs/hooks/useJobs';
 import type { JobFilters } from '@/features/jobs/services/jobApi';
-import type { JobApplication, JobPaginationResponse } from '@/features/jobs/types';
+import type { JobApplication } from '@/features/jobs/types';
 import { JobTable } from '@/features/jobs/components/JobTable';
 import { JobDetailsModal } from '@/features/jobs/components/JobDetailsModal';
 import { AddJobSlideOver } from '@/features/jobs/components/AddJobSlideOver';
@@ -36,9 +36,6 @@ const getPageNumbers = (current: number, last: number) => {
 };
 
 export const JobsPage = () => {
-    const [jobs, setJobs] = useState<JobApplication[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [pagination, setPagination] = useState<JobPaginationResponse['meta'] | null>(null);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,69 +47,28 @@ export const JobsPage = () => {
     // Filter sync from URL
     const [searchParams, setSearchParams] = useSearchParams();
     const currentPageStr = searchParams.get('page');
-    // We treat the URL page as absolute truth for where we are. Default to 1.
     const urlPage = currentPageStr ? parseInt(currentPageStr, 10) : 1;
-
     const currentPerPageStr = searchParams.get('per_page');
     const urlPerPage = currentPerPageStr ? parseInt(currentPerPageStr, 10) : 10;
 
-    // Abort controller var to handle the debounce race condition
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const filters: JobFilters = {
+        search: searchParams.get('search') || undefined,
+        status: searchParams.get('status') || undefined,
+        date_applied: searchParams.get('date_applied') || undefined,
+    };
 
-    const fetchJobs = useCallback(async (page = urlPage, currentPerPage = urlPerPage) => {
-        setLoading(true);
+    const { data: response, isLoading, isFetching } = useGetJobs(urlPage, urlPerPage, filters);
+    const { mutateAsync: bulkDeleteJobs } = useBulkDeleteJobs();
 
-        // 1. Cancel previous pending request to avoid Race Conditions
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-
-        // 2. Create a fresh controller for this specific request
-        const currentController = new AbortController();
-        abortControllerRef.current = currentController;
-
-        try {
-            const filters: JobFilters = {
-                search: searchParams.get('search') || undefined,
-                status: searchParams.get('status') || undefined,
-                date_applied: searchParams.get('date_applied') || undefined,
-            };
-
-            const response = await jobApi.getJobs(page, currentPerPage, filters, currentController.signal);
-            setJobs(response.data);
-            setPagination(response.meta);
-        } catch (error: any) {
-            // Ignore cancelation errors explicitly
-            if (error.name === 'CanceledError' || error.message?.includes('canceled')) {
-                return;
-            }
-            console.error("Failed to fetch jobs", error);
-        } finally {
-            // Only stop loading if THIS request is still the active one
-            if (abortControllerRef.current === currentController) {
-                setLoading(false);
-            }
-        }
-    }, [urlPerPage, searchParams, urlPage]);
-
-    // Re-fetch whenever deeply linked parameters change 
-    useEffect(() => {
-        fetchJobs(urlPage);
-
-        // Cleanup loop for unmounting
-        return () => {
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
-        };
-    }, [searchParams]); // Re-run when URL search tracking changes
+    const jobs = response?.data || [];
+    const pagination = response?.meta || null;
+    const activeFetching = isLoading || isFetching;
 
     const handleBulkDelete = async () => {
         setIsDeleteConfirmOpen(false);
         try {
-            await jobApi.bulkDeleteJobs(selectedIds);
+            await bulkDeleteJobs(selectedIds);
             setSelectedIds([]);
-            fetchJobs(); // Respects urlPage internally now
         } catch (error) {
             console.error("Bulk delete failed", error);
         }
@@ -121,7 +77,6 @@ export const JobsPage = () => {
     const handleSuccess = () => {
         setIsAddOpen(false);
         setJobToEdit(null);
-        fetchJobs();
         setShowToast(true);
         setTimeout(() => setShowToast(false), 4000);
     };
@@ -129,7 +84,6 @@ export const JobsPage = () => {
     const handleDeleteSuccess = () => {
         setIsModalOpen(false);
         setTimeout(() => setSelectedJobId(null), 300);
-        fetchJobs();
     };
 
     const handlePerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -182,9 +136,9 @@ export const JobsPage = () => {
                 </div>
             </div>
 
-            {jobs.length > 0 || loading ? (
+            {jobs.length > 0 || activeFetching ? (
                 <>
-                    <div className={`${loading ? 'opacity-50 pointer-events-none' : ''} transition-opacity duration-200`}>
+                    <div className={`${activeFetching ? 'opacity-50 pointer-events-none' : ''} transition-opacity duration-200`}>
                         <JobTable
                             jobs={jobs}
                             selectedIds={selectedIds}
