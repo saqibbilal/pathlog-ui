@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import { useLogin } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 export const LoginForm = () => {
     const [email, setEmail] = useState('');
@@ -65,6 +66,17 @@ export const LoginForm = () => {
             <p className="text-center mt-8 text-text-main opacity-50 text-sm font-medium">
                 Don't have an account? <a href="/register" className="text-brand font-bold hover:underline">Sign up</a>
             </p>
+
+            <p className="text-center mt-8 text-text-main opacity-50 text-sm font-medium">
+                Forgot your password?
+                <Link
+                to="/forgot-password"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+                Reset Password
+            </Link>
+            </p>
+
         </div>
     );
 };

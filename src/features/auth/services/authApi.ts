@@ -22,3 +22,9 @@ export const authApi = {
         await api.post('/logout');
     }
 };
+
+// Add this to your authApi.ts
+export const forgotPassword = async (email: string) => {
+    const response = await api.post('/forgot-password', { email });
+    return response.data;
+};
