@@ -65,6 +65,22 @@ export const JobDetailsModal = ({ jobId, onClose, onDelete, onEdit }: Props) => 
                                 <p className="text-text-main font-medium">{job?.contact?.name || 'No contact listed'}</p>
                                 <p className="text-brand text-sm font-bold">{job?.contact?.email || 'No email provided'}</p>
                             </div>
+
+                            {job?.job_description_url && (
+                                <div className="mb-8">
+                                    <h3 className="text-[10px] font-bold text-text-main opacity-40 uppercase tracking-widest mb-2">Job Link</h3>
+                                    <a
+                                        href={job.job_description_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-brand hover:underline break-all text-sm font-medium inline-flex items-center gap-1.5"
+                                    >
+                                        {job.job_description_url}
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                    </a>
+                                </div>
+                            )}
+
                             <div className="prose prose-slate max-w-none">
                                 <h3 className="text-[10px] font-bold text-text-main opacity-40 uppercase tracking-widest mb-2">Job Description</h3>
                                 <div className="text-text-main opacity-80 whitespace-pre-wrap leading-relaxed text-sm">

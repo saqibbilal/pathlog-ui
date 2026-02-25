@@ -116,6 +116,11 @@ export const AddJobSlideOver = ({ isOpen, onClose, onSuccess, jobToEdit }: Props
                                         </div>
 
                                         <div>
+                                            <label className="block text-xs font-bold text-text-main opacity-50 uppercase tracking-widest mb-2">Job URL</label>
+                                            <input type="url" value={formData.job_description_url} onChange={e => setFormData({ ...formData, job_description_url: e.target.value })} className={inputClasses} placeholder="https://linkedin.com/jobs/..." />
+                                        </div>
+
+                                        <div>
                                             <label className="block text-xs font-bold text-text-main opacity-50 uppercase tracking-widest mb-2">Description</label>
                                             <textarea value={formData.job_description_text} onChange={e => setFormData({ ...formData, job_description_text: e.target.value })} rows={6} className={inputClasses} placeholder="Requirements, notes, etc." />
                                         </div>
