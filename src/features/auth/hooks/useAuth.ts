@@ -2,6 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/features/auth/services/authApi';
 import { useAuthStore } from '@/store/useAuthStore';
+import { forgotPassword } from '@/features/auth/services/authApi';
+import { resetPassword } from '@/features/auth/services/authApi';
+import type { ResetPasswordData } from '@/features/auth/types';
 
 export const useLogin = () => {
     const navigate = useNavigate();
@@ -31,6 +34,27 @@ export const useRegister = () => {
         onSuccess: (data) => {
             setAuth(data.user, data.token);
             navigate('/dashboard');
+        },
+    });
+};
+
+export const useForgotPassword = () => {
+    return useMutation({
+        mutationFn: (email: string) => forgotPassword(email),
+        // We can add global success/error logic here later if needed
+    });
+};
+
+export const useResetPassword = () => {
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: (data: ResetPasswordData) => resetPassword(data),
+        onSuccess: () => {
+            // Delay navigation slightly so the user can see the success message
+            setTimeout(() => {
+                navigate('/login');
+            }, 2500);
         },
     });
 };

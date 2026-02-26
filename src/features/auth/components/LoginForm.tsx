@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/Input';
-import { useLogin } from '../hooks/useAuth';
+import { useLogin } from '@/features/auth/hooks/useAuth';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 export const LoginForm = () => {
     const [email, setEmail] = useState('');
@@ -11,8 +12,9 @@ export const LoginForm = () => {
     const { mutate: login, isPending, error } = useLogin();
 
     // Safely extract error message from the TanStack error object
-    const axiosError = error as any;
-    const errorMessage = axiosError?.response?.data?.message || null;
+    const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.message
+        : null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -64,17 +66,17 @@ export const LoginForm = () => {
             </form>
 
             <p className="text-center mt-8 text-text-main opacity-50 text-sm font-medium">
-                Don't have an account? <a href="/register" className="text-brand font-bold hover:underline">Sign up</a>
+                Don't have an account?{' '}
+                <Link to="/register" className="text-brand font-bold hover:underline">
+                    Sign up
+                </Link>
             </p>
 
-            <p className="text-center mt-8 text-text-main opacity-50 text-sm font-medium">
-                Forgot your password?
-                <Link
-                to="/forgot-password"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-                Reset Password
-            </Link>
+            <p className="text-center mt-4 text-text-main opacity-50 text-sm font-medium">
+                Forgot your password?{' '}
+                <Link to="/forgot-password" className="text-brand font-bold hover:underline">
+                    Reset Password
+                </Link>
             </p>
 
         </div>
