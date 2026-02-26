@@ -1,6 +1,6 @@
 // src/features/auth/services/authApi.ts
 import api from '@/api/axios';
-import type { LoginCredentials, RegisterCredentials, AuthResponse } from '@/features/auth/types';
+import type {LoginCredentials, RegisterCredentials, AuthResponse, ResetPasswordData} from '@/features/auth/types';
 
 
 export const authApi = {
@@ -26,5 +26,11 @@ export const authApi = {
 // Add this to your authApi.ts
 export const forgotPassword = async (email: string) => {
     const response = await api.post('/forgot-password', { email });
+    return response.data;
+};
+
+// Add this to your authApi.ts
+export const resetPassword = async (data: ResetPasswordData) => {
+    const response = await api.post('/reset-password', data);
     return response.data;
 };

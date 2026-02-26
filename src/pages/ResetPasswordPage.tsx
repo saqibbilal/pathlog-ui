@@ -1,9 +1,9 @@
-import { ForgetPasswordForm } from '@/features/auth/components/ForgetPasswordForm';
+import { ResetPasswordForm } from '../features/auth/components/ResetPasswordForm';
 
 const ResetPasswordPage = () => {
     return (
         <div className="relative min-h-screen flex items-center justify-center bg-workspace px-6 py-12 transition-colors duration-500">
-            {/* Background Accents */}
+            {/* Background Accents - Matching Login/Forgot Pages */}
             <div className="absolute inset-0 overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full bg-brand/10 blur-[120px]" />
                 <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full bg-brand/5 blur-[120px]" />
@@ -19,7 +19,7 @@ const ResetPasswordPage = () => {
                     </p>
                 </div>
 
-                <ForgetPasswordForm />
+                <ResetPasswordForm />
             </div>
         </div>
     );

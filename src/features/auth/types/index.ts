@@ -27,3 +27,10 @@ export interface AuthError {
     message: string;
     errors?: Record<string, string[]>;
 }
+
+export interface ResetPasswordData {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
