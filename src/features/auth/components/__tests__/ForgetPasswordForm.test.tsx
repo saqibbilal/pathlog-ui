@@ -4,6 +4,7 @@ import { ForgetPasswordForm } from '@/features/auth/components/ForgetPasswordFor
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import * as authHooks from '@/features/auth/hooks/useAuth';
+import userEvent from '@testing-library/user-event'; // Add this import at the top
 
 // 1. Mock the hook so we don't hit the real API
 vi.mock('../../hooks/useAuth', () => ({
@@ -61,5 +62,29 @@ describe('ForgetPasswordForm', () => {
 
         expect(screen.getByText(/check your email/i)).toBeInTheDocument();
         expect(screen.getByText(/back to login/i)).toBeInTheDocument();
+    });
+
+    it('calls the mutate function with the email when form is submitted', async () => {
+        // 1. Setup the spy function
+        const mockMutate = vi.fn();
+        (authHooks.useForgotPassword as any).mockReturnValue({
+            mutate: mockMutate,
+            isPending: false,
+            isSuccess: false,
+            error: null
+        });
+
+        const user = userEvent.setup();
+        renderComponent();
+
+        // 2. Act: Type in the email and click submit
+        const emailInput = screen.getByLabelText(/email address/i);
+        const submitButton = screen.getByRole('button', { name: /send reset link/i });
+
+        await user.type(emailInput, 'dev@example.com');
+        await user.click(submitButton);
+
+        // 3. Assert: Verify the hook was called correctly
+        expect(mockMutate).toHaveBeenCalledWith('dev@example.com');
     });
 });
