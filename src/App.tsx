@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
@@ -11,11 +10,8 @@ import { Layout } from '@/components/Layout';
 import { JobsPage } from '@/pages/JobsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
-const queryClient = new QueryClient();
-
 function App() {
     return (
-        <QueryClientProvider client={queryClient}>
             <BrowserRouter>
                 <GlobalToast />
                 <Routes>
@@ -41,7 +37,6 @@ function App() {
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
             </BrowserRouter>
-        </QueryClientProvider>
     );
 }
 const DashboardHome = () => (
